@@ -96,7 +96,7 @@ if __name__ == "__main__":
     for b, idxs in pad_idxs:
         input_data[b, idxs] = pad
 
-    # Padding mask const
+    # Padding boolean mask
     collapsed_input = input_data[:, :, 0]
     collapsed_pad = pad[:, 0]
     pads = torch.eq(collapsed_input, collapsed_pad).to(device)
