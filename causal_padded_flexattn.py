@@ -33,28 +33,28 @@ class MultiheadFlexAttention(nn.Module):
         """
         description: forward pass of the multiheaded self-attention module.
         args:
-            x: torch.Tensor, the input tensor of shape (batch_size, seq_len, d_in)
+            x: torch.Tensor, the input tensor of shape (batch_size, max_seq_len, d_in)
             block_mask: torch.Tensor, the block mask to use for flex_attention
         """
-        batch_size, seq_len, d_in = x.shape
+        batch_size, max_seq_len, d_in = x.shape
 
         # Create stacked qkv via input projection
-        qkv = self.in_proj(x) # (batch_size, seq_len , 3 * d_in)
+        qkv = self.in_proj(x) # (batch_size, max_seq_len , 3 * d_in)
 
         # Split qkv and divide d_in into heads
-        qkv = qkv.view(batch_size, seq_len, 3, self.n_heads, self.d_head) # (batch_size, seq_len, 3, n_heads, d_head)
+        qkv = qkv.view(batch_size, max_seq_len, 3, self.n_heads, self.d_head) # (batch_size, max_seq_len, 3, n_heads, d_head)
 
         # Permute shape of qkv for flex_attention
-        qkv = qkv.permute(2, 0, 3, 1, 4) # (3, batch_size, n_heads, seq_len, d_head)
+        qkv = qkv.permute(2, 0, 3, 1, 4) # (3, batch_size, n_heads, max_seq_len, d_head)
 
         # Get queries, keys, values
-        queries, keys, values = qkv # 3 x (batch_size, n_heads, seq_len, d_head)
+        queries, keys, values = qkv # 3 x (batch_size, n_heads, max_seq_len, d_head)
 
         # Calculate attention via flex_attention
-        attn = flex_attention(queries, keys, values, block_mask=block_mask) # (batch_size, n_heads, seq_len, d_head)
+        attn = flex_attention(queries, keys, values, block_mask=block_mask) # (batch_size, n_heads, max_seq_len, d_head)
 
         # Merge heads into d_out
-        attn = attn.transpose(1, 2).contiguous().view(batch_size, seq_len, self.d_out)
+        attn = attn.transpose(1, 2).contiguous().view(batch_size, max_seq_len, self.d_out)
 
         # Pass attention output through output projection
         attn = self.out_proj(attn)
@@ -85,20 +85,20 @@ if __name__ == "__main__":
 
     # Data parameters
     batch_size = 1
-    seq_len = 10
+    max_seq_len = 10
 
-    # Create random inpuy data
-    input_data = torch.randn(batch_size, seq_len, d_in).to(device)
+    # Create random input data
+    input_data = torch.randn(batch_size, max_seq_len, d_in).to(device)
 
     # Edit data to have random zero-padding
     pad = torch.zeros(1, d_in).to(device)
-    pad_idxs = [(b, range(torch.randint(seq_len//2, seq_len + 1, (1,)).item(), seq_len)) for b in range(batch_size)]
+    pad_idxs = [(b, range(torch.randint(max_seq_len//2, max_seq_len + 1, (1,)).item(), max_seq_len)) for b in range(batch_size)]
     for b, idxs in pad_idxs:
         input_data[b, idxs] = pad
 
     # Padding boolean mask
-    collapsed_input = input_data[:, :, 0]
-    collapsed_pad = pad[:, 0]
+    collapsed_input = input_data[:, :, 0] # (batch_size, max_seq_len)
+    collapsed_pad = pad[:, 0] # (1,)
     pads = torch.eq(collapsed_input, collapsed_pad).to(device)
 
     # Create causal padding mask
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     padding_mask = create_padding_mask(pads)
     masks = [causal, padding_mask]
     combined_mask = and_masks(*masks)
-    causal_padding_mask = create_block_mask(combined_mask, B=batch_size, H=None, Q_LEN=seq_len, KV_LEN=seq_len, _compile=True)
+    causal_padding_mask = create_block_mask(combined_mask, B=batch_size, H=None, Q_LEN=max_seq_len, KV_LEN=max_seq_len, _compile=True)
 
     # Forward pass
     attn_output, query, key = mhfa(input_data, causal_padding_mask)
