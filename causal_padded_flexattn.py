@@ -98,8 +98,7 @@ if __name__ == "__main__":
 
     # Padding boolean mask
     collapsed_input = input_data[:, :, 0] # (batch_size, max_seq_len)
-    collapsed_pad = pad[:, 0] # (1,)
-    pads = torch.eq(collapsed_input, collapsed_pad).to(device)
+    pads = torch.eq(collapsed_input, 0).to(device)
 
     # Create causal padding mask
     causal_mask = causal
