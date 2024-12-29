@@ -1,6 +1,3 @@
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "7"
-
 import torch
 from torch import nn
 from torch.nn.attention.flex_attention import flex_attention, and_masks, create_block_mask
