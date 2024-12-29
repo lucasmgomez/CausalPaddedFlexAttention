@@ -41,7 +41,7 @@ def create_padding_mask(pads):
 
 Here `pads` is a BoolTensor of size `(batch_size, max_seq_len) `where positions of padding tokens are True and the other token positions are False. The `padding` mask_mod function returns a padding mask where attention scores will only be calculated when neither the query nor key/value token are padding.
 
-### For a full breakdown of [<u>causal_padded_flexattn.py</u>](./causal_padded_flexattn.py) checkout my [blog](https://medium.com/p/25e21b294551/e)!
+### For a full breakdown of [<u>causal_padded_flexattn.py</u>](./causal_padded_flexattn.py) checkout my [blog](https://medium.com/@lucasmgomez/casual-attention-with-padded-inputs-via-pytorch-flexattention-25e21b294551)!
 
 
 #### Resources used:
