@@ -103,7 +103,7 @@ if __name__ == "__main__":
     # Create causal padding mask
     causal_mask = causal
     padding_mask = create_padding_mask(pads)
-    masks = [causal, padding_mask]
+    masks = [causal_mask, padding_mask]
     combined_mask = and_masks(*masks)
     causal_padding_mask = create_block_mask(combined_mask, B=batch_size, H=None, Q_LEN=max_seq_len, KV_LEN=max_seq_len, _compile=True)
 
